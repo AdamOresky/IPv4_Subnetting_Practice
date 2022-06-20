@@ -62,13 +62,9 @@ def type_of_address_check(octets, mask):
         for a in range(len(interfaces)):
             if mask < interfaces[a]:
                 multiples = 2 ** (interfaces[a] - mask)
-                while actual < 256 and type_of_address == "":
-                    if octets[a] == actual:
-                        type_of_address = "N"
-                    elif octets[a] == actual + multiples - 1:
-                        type_of_address = "B"
-                    elif actual < octets[a] < actual + multiples - 1:
-                        type_of_address = "H"
+                while actual < 256:
+                    if actual <= octets[a] <= actual + multiples - 1:
+                        break
                     else:
                         actual += multiples
                 for b in range(a):
@@ -105,14 +101,14 @@ def type_of_address_check(octets, mask):
 
 
 def main():
-    octets = [random.randint(0, 255) for _ in range(4)]
-    mask = random.randint(1, 30)
-    print(f'IP: {octets[0]}.{octets[1]}.{octets[2]}.{octets[3]} /{mask}')
-    class_check(int(octets[0]))
-    private_check(int(octets[0]), int(octets[1]))
-    type_of_address_check(octets, mask)
-    print()
-    main()
+    while True:
+        octets = [random.randint(0, 255) for _ in range(4)]
+        mask = random.randint(1, 30)
+        print(f'IP: {octets[0]}.{octets[1]}.{octets[2]}.{octets[3]} /{mask}')
+        class_check(int(octets[0]))
+        private_check(int(octets[0]), int(octets[1]))
+        type_of_address_check(octets, mask)
+        print()
 
 
 main()
