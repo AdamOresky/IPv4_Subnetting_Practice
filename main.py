@@ -2,58 +2,40 @@ import random
 import sys
 
 
-def class_check(first_octet):
-    classes = ["A", "B", "C", "D", "E"]
+# region Global variables
+classes = ["A", "B", "C", "D", "E"]
+octets = []
+mask = 0
+# endregion
+
+
+# region Logic functions
+def generate_logic():
+    global octets, mask
+    octets = [random.randint(0, 255) for _ in range(4)]
+    mask = random.randint(1, 30)
+
+
+def class_logic():
     interfaces = [128, 192, 224, 240, 256]
 
-    if 0 <= first_octet <= 255:
+    if 0 <= octets[0] <= 255:
         for i in range(len(interfaces)):
-            if first_octet < interfaces[i]:
-                right_answer = classes[i]
-                break
+            if octets[0] < interfaces[i]:
+                return classes[i]
     else:
         input("FATAL ERROR: The generated IP is not valid...")
         sys.exit()
 
-    entered_answer = input("Enter class: ").upper()
-    while entered_answer not in classes:
-        entered_answer = input("Incorrect input. Enter class: ").upper()
-    if entered_answer != right_answer:
-        input(f'Incorrect. The correct answer is {right_answer}.')
 
-
-def private_check(first_octet, second_octet):
-    if first_octet == 10 or \
-            first_octet == 172 and 16 <= second_octet < 32 or \
-            first_octet == 192 and second_octet == 168:
-        right_answer = "pri"
+def private_logic():
+    if octets[0] == 10 or octets[0] == 172 and 16 <= octets[1] < 32 or octets[0] == 192 and octets[1] == 168:
+        return "pri"
     else:
-        right_answer = "pub"
-
-    entered_answer = input("Specify whether the address is private or public. [pri/pub]: ").lower()
-    while len(entered_answer) != 3 and entered_answer not in ['pri', 'pub']:
-        entered_answer = input("Incorrect input. Enter your answer again: ").lower()
-    if entered_answer != right_answer and right_answer == "pri":
-        input("Incorrect. This address is private.")
-    elif entered_answer != right_answer and right_answer == "pub":
-        input("Incorrect. This address is public.")
+        return "pub"
 
 
-def subnet_check(octets, mask, type_of_address, net_address, bro_address):
-    address_base = ""
-    for i in range(0, mask // 8):
-        address_base += str(octets[i]) + "."
-    if type_of_address != "N":
-        entered_answer = input(f'Enter network address: {address_base}')
-        if address_base + entered_answer != net_address:
-            input(f'Incorrect. Network address is {net_address}')
-    if type_of_address != "B":
-        entered_answer = input(f'Enter broadcast address: {address_base}')
-        if address_base + entered_answer != bro_address:
-            input(f'Incorrect. Broadcast address is {bro_address}')
-
-
-def type_of_address_check(octets, mask):
+def type_logic():
     type_of_address, net_address, bro_address = "", "", ""
     actual = 0
     interfaces = [8, 16, 24, 32]
@@ -75,17 +57,58 @@ def type_of_address_check(octets, mask):
                 while net_address.count(".") < 3:
                     net_address += ".0"
                     bro_address += ".255"
-                break
+                if octets == net_address.split('.'):
+                    type_of_address = "N"
+                elif octets == bro_address.split('.'):
+                    type_of_address = "B"
+                else:
+                    type_of_address = "H"
+                return type_of_address, net_address, bro_address
     else:
         input("FATAL ERROR: The program can't handle generated mask...")
         sys.exit()
+# endregion
 
-    if octets == net_address.split('.'):
-        type_of_address = "N"
-    elif octets == bro_address.split('.'):
-        type_of_address = "B"
-    else:
-        type_of_address = "H"
+
+# region Input functions
+def class_input():
+    right_answer = class_logic()
+
+    entered_answer = input("Enter class: ").upper()
+    while entered_answer not in classes:
+        entered_answer = input("Incorrect input. Enter class: ").upper()
+    if entered_answer != right_answer:
+        input(f'Incorrect. The correct answer is {right_answer}.')
+
+
+def private_input():
+    right_answer = private_logic()
+
+    entered_answer = input("Specify whether the address is private or public. [pri/pub]: ").lower()
+    while len(entered_answer) != 3 and entered_answer not in ['pri', 'pub']:
+        entered_answer = input("Incorrect input. Enter your answer again: ").lower()
+    if entered_answer != right_answer and right_answer == "pri":
+        input("Incorrect. This address is private.")
+    elif entered_answer != right_answer and right_answer == "pub":
+        input("Incorrect. This address is public.")
+
+
+def subnet_input(type_of_address, net_address, bro_address):
+    address_base = ""
+    for i in range(0, mask // 8):
+        address_base += str(octets[i]) + "."
+    if type_of_address != "N":
+        entered_answer = input(f'Enter network address: {address_base}')
+        if address_base + entered_answer != net_address:
+            input(f'Incorrect. Network address is {net_address}')
+    if type_of_address != "B":
+        entered_answer = input(f'Enter broadcast address: {address_base}')
+        if address_base + entered_answer != bro_address:
+            input(f'Incorrect. Broadcast address is {bro_address}')
+
+
+def type_input():
+    type_of_address, net_address, bro_address = type_logic()
 
     entered_answer = input("Specify whether this is a network, host, or broadcast address. [N/H/B]: ").upper()
     while entered_answer not in ['N', 'H', 'B']:
@@ -93,21 +116,21 @@ def type_of_address_check(octets, mask):
     if entered_answer != type_of_address and type_of_address == "N":
         input("Incorrect. This IP is a network address.")
     elif entered_answer != type_of_address and type_of_address == "H":
-        input("Incorrect. This IP is a host address")
+        input("Incorrect. This IP is a host address.")
     elif entered_answer != type_of_address:
         input("Incorrect. This IP is a broadcast address.")
 
-    subnet_check(octets, mask, type_of_address, net_address, bro_address)
+    subnet_input(type_of_address, net_address, bro_address)
+# endregion
 
 
 def main():
     while True:
-        octets = [random.randint(0, 255) for _ in range(4)]
-        mask = random.randint(1, 30)
+        generate_logic()
         print(f'IP: {octets[0]}.{octets[1]}.{octets[2]}.{octets[3]} /{mask}')
-        class_check(int(octets[0]))
-        private_check(int(octets[0]), int(octets[1]))
-        type_of_address_check(octets, mask)
+        class_input()
+        private_input()
+        type_input()
         print()
 
 
